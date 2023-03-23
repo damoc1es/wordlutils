@@ -41,8 +41,30 @@ class WordleGame:
                     raise Exception("Invalid result character found.")
 
 
-class WordleSimulation:
-    pass
+class WordleSimulation():
+    def __init__(self, winning_word, gray_key="_", yellow_key="Y", green_key="G"):
+        self.gray_key = gray_key
+        self.yellow_key = yellow_key
+        self.green_key = green_key
+
+        self.winning_word = winning_word.lower()
+    
+    def result(self, word):
+        word = list(word.lower())
+        winner = list(self.winning_word)
+        res = [self.gray_key for _ in range(5)]
+
+        for i, c in enumerate(word):
+            if c == winner[i]:
+                res[i] = self.green_key
+                word[i] = winner[i] = self.gray_key
+        
+        for i, c in enumerate(word):
+            if c != self.gray_key and c in winner:
+                res[i] = self.yellow_key
+                word[i] = winner[winner.index(c)] = self.gray_key
+
+        return "".join(res)
 
 
 class Repository:
@@ -50,7 +72,7 @@ class Repository:
         self.filename = filename
 
     def store(self, date: datetime.date, tries: list[str], results: list[str], winning: str):
-        line = f"{date.toisoformat()},{' '.join(tries)},{' '.join(results)},{winning}\n"
+        line = f"{date.isoformat()},{' '.join(tries)},{' '.join(results)},{winning}\n"
         with open(self.filename, "a") as file:
             file.write(line)
 
@@ -92,7 +114,8 @@ class Controller:
         date = datetime.date.today()
         simulation = WordleSimulation(winning)
         results = [simulation.result(word) for word in tries]
-        self.repo.store(date, tries, results, winning)
+        tries = [w.upper() for w in tries]
+        self.repo.store(date, tries, results, winning.upper())
 
 
 class CLI:
@@ -105,7 +128,7 @@ class CLI:
     def print():
         print("--- Available commands ---")
         print(f"{CLI.BOLD}checker{CLI.END} - start game for checking possibilities")
-        # print(f"{CLI.BOLD}save{CLI.END} - save already completed game")
+        print(f"{CLI.BOLD}save{CLI.END} - save already completed game")
         # print(f"{CLI.BOLD}backup{CLI.END} - backup saves to timestamped file")
         print(f"{CLI.BOLD}exit{CLI.END} - quit")
 
@@ -128,6 +151,27 @@ class CLI:
                     self.srv.add_try(word, result)
                     print("ADDED TRY\n")
 
+    def save_menu(self):
+        print("-- Enter winning word or CANCEL to exit")
+        winning = input().lower()
+        match winning:
+            case 'cancel':
+                return
+            case _:
+                print("-- Enter the words or empty to exit")
+                tries = []
+                for _ in range(6):
+                    word = input().lower()
+                    if word == winning:
+                        tries.append(winning)
+                        break
+                    if word.strip() == '':
+                        break
+                    tries.append(word)
+        
+        self.srv.store(tries, winning)
+        print("GAME SAVED")
+
     def start(self):
         while True:
             CLI.print()
@@ -135,8 +179,8 @@ class CLI:
             match cmd.lower():
                 case 'checker':
                     self.checker_menu()
-                # case 'save':
-                #     self.save_menu()
+                case 'save':
+                    self.save_menu()
                 case 'exit':
                     break
                 case _:
