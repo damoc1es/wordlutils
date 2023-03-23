@@ -4,12 +4,14 @@ import requests
 WORDS_LIST_LINK = 'https://raw.githubusercontent.com/tabatkins/wordle-list/main/words'
 
 
-class WordleGame:
-    def __init__(self, gray_key="_", yellow_key="Y", green_key="G"):
-        self.gray_key = gray_key
-        self.yellow_key = yellow_key
-        self.green_key = green_key
+class ResultKey:
+    GRAY = '_'
+    YELLOW = 'Y'
+    GREEN = 'G'
 
+
+class WordleGame:
+    def __init__(self):
         self.green_chars = {1: None, 2: None, 3: None, 4: None, 5: None}
         self.yellow_chars = {1: "", 2: "", 3: "", 4: "", 5: ""}
         self.gray_chars = ""
@@ -21,7 +23,7 @@ class WordleGame:
         
         word_tried = word_tried.lower()
 
-        if set(result) == self.green_key:
+        if set(result) == ResultKey.GREEN:
             self.solution = word_tried
             return
 
@@ -29,40 +31,36 @@ class WordleGame:
         for c, t in zip(word_tried, result):
             i += 1
             match t:
-                case self.gray_key:
+                case ResultKey.GRAY:
                     if word_tried.count(c) == 1:
                         self.gray_chars += c
                     else: self.yellow_chars[i] += c
-                case self.yellow_key:
+                case ResultKey.YELLOW:
                     self.yellow_chars[i] += c
-                case self.green_key:
+                case ResultKey.GREEN:
                     self.green_chars[i] = c
                 case _:
                     raise Exception("Invalid result character found.")
 
 
 class WordleSimulation():
-    def __init__(self, winning_word, gray_key="_", yellow_key="Y", green_key="G"):
-        self.gray_key = gray_key
-        self.yellow_key = yellow_key
-        self.green_key = green_key
-
+    def __init__(self, winning_word):
         self.winning_word = winning_word.lower()
     
     def result(self, word):
         word = list(word.lower())
         winner = list(self.winning_word)
-        res = [self.gray_key for _ in range(5)]
+        res = [ResultKey.GRAY for _ in range(5)]
 
         for i, c in enumerate(word):
             if c == winner[i]:
-                res[i] = self.green_key
-                word[i] = winner[i] = self.gray_key
+                res[i] = ResultKey.GREEN
+                word[i] = winner[i] = ResultKey.GRAY
         
         for i, c in enumerate(word):
-            if c != self.gray_key and c in winner:
-                res[i] = self.yellow_key
-                word[i] = winner[winner.index(c)] = self.gray_key
+            if c != ResultKey.GRAY and c in winner:
+                res[i] = ResultKey.YELLOW
+                word[i] = winner[winner.index(c)] = ResultKey.GRAY
 
         return "".join(res)
 
@@ -106,6 +104,7 @@ class Controller:
 
         filtered = list(filter(lambda x: len(set(x) & set(grays)) == 0, self.all_words)) # gray
         filtered = list(filter(lambda x: all([x[i] not in yellows[i+1] for i in range(5)]), filtered)) # yellow
+        filtered = list(filter(lambda x: all([c in x for c in yellows.values() if c != ""]), filtered)) # yellow
         filtered = list(filter(lambda x: all([True if greens[i+1] is None else x[i] == greens[i+1] for i in range(5)]), filtered)) # green
 
         return filtered
@@ -147,7 +146,7 @@ class CLI:
                         print(solution.upper())
                     print()
                 case _:
-                    result = input("Enter result: ")
+                    result = input(f"Enter result (gray '{ResultKey.GRAY}', yellow '{ResultKey.YELLOW}', green '{ResultKey.GREEN}'):\n")
                     self.srv.add_try(word, result)
                     print("ADDED TRY\n")
 
