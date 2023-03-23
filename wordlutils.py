@@ -187,5 +187,5 @@ class CLI:
 
 
 if __name__ == '__main__':
-    ui = CLI(Controller(Repository("data/wordles.txt")))
+    ui = CLI(Controller(Repository("data/wordles.csv")))
     ui.start()
