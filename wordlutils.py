@@ -9,19 +9,42 @@ class ResultKey:
     YELLOW = 'Y'
     GREEN = 'G'
 
+def result_to_colored_box(string):
+    res = ""
+    for c in string:
+        if c is ResultKey.GRAY:
+            res += '⬛'
+        elif c is ResultKey.YELLOW:
+            res += '🟨'
+        elif c is ResultKey.GREEN:
+            res += '🟩'
+        else: res += c
+    return res
+
 
 class WordleGame:
-    def __init__(self):
+    def __init__(self, date=None, solution=None, tries=None, results=None):
         self.green_chars = {1: None, 2: None, 3: None, 4: None, 5: None}
         self.yellow_chars = {1: "", 2: "", 3: "", 4: "", 5: ""}
         self.gray_chars = ""
-        self.solution = None
+
+        self.date = date
+        self.solution = solution
+        if tries is None:
+            self.tries = []
+        else: self.tries = tries
+        
+        if results is None:
+            self.results = []
+        else: self.results = results
 
     def add_try(self, word_tried: str, result: str) -> None:
         if len(word_tried) != len(result) or len(word_tried) != 5:
             raise Exception("Word length must be 5 and the result has to be the same length.")
         
         word_tried = word_tried.lower()
+        
+        self.tries.append(word_tried)
 
         if set(result) == ResultKey.GREEN:
             self.solution = word_tried
@@ -41,6 +64,12 @@ class WordleGame:
                     self.green_chars[i] = c
                 case _:
                     raise Exception("Invalid result character found.")
+    
+    def __str__(self):
+        s = f"{self.date} | {self.solution}"
+        for r, t in zip(self.results, self.tries):
+            s += f"\n{result_to_colored_box(r)} {t}"
+        return s
 
 
 class WordleSimulation():
@@ -71,11 +100,24 @@ class Repository:
 
     def store(self, date: datetime.date, tries: list[str], results: list[str], winning: str):
         line = f"{date.isoformat()},{' '.join(tries)},{' '.join(results)},{winning}\n"
-        with open(self.filename, "a") as file:
+        with open(self.filename, 'a') as file:
             file.write(line)
 
     def get(self, date):
-        pass
+        result = []
+        with open(self.filename, 'r') as file:
+            result = file.readlines()
+        
+        if date != None:
+            result = [x.strip() for x in result if x.split(',')[0] == str(date)]
+        else: result = [result[-1].strip()]
+        
+        if len(result) == 0:
+            return None
+        
+        s = result[0].split(',')
+
+        return WordleGame(s[0], s[3], s[1].split(), s[2].split())
 
 
 class Controller:
@@ -115,6 +157,9 @@ class Controller:
         results = [simulation.result(word) for word in tries]
         tries = [w.upper() for w in tries]
         self.repo.store(date, tries, results, winning.upper())
+    
+    def get_game(self, date=None):
+        return self.repo.get(date)
 
 
 class CLI:
@@ -128,6 +173,7 @@ class CLI:
         print("--- Available commands ---")
         print(f"{CLI.BOLD}checker{CLI.END} - start game for checking possibilities")
         print(f"{CLI.BOLD}save{CLI.END} - save already completed game")
+        print(f"{CLI.BOLD}get{CLI.END} - look up a saved game by date")
         # print(f"{CLI.BOLD}backup{CLI.END} - backup saves to timestamped file")
         print(f"{CLI.BOLD}exit{CLI.END} - quit")
 
@@ -171,6 +217,23 @@ class CLI:
         self.srv.store(tries, winning)
         print("GAME SAVED")
 
+    def get_menu(self):
+        # return
+        print("-- Enter date (YEAR-MONTH-DAY), empty to get the last one, or EXIT to exit")
+        date_str = input()
+        if date_str in ("EXIT", "exit"):
+            return
+        if date_str == "":
+            game = self.srv.get_game()
+            print(game)
+        else:
+            try:
+                date = datetime.date.fromisoformat(date_str)
+                game = self.srv.get_game(date)
+                print(game)
+            except:
+                print("INVALID DATE FORMAT")
+
     def start(self):
         while True:
             CLI.print()
@@ -180,6 +243,8 @@ class CLI:
                     self.checker_menu()
                 case 'save':
                     self.save_menu()
+                case 'get':
+                    self.get_menu()
                 case 'exit':
                     break
                 case _:
