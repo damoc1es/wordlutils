@@ -1,5 +1,6 @@
 import datetime
 import requests
+import shutil, os
 
 WORDS_LIST_LINK = 'https://raw.githubusercontent.com/tabatkins/wordle-list/main/words'
 
@@ -118,6 +119,12 @@ class Repository:
         s = result[0].split(',')
 
         return WordleGame(s[0], s[3], s[1].split(), s[2].split())
+    
+    def backup(self, date: datetime.datetime):
+        filename, file_extension = os.path.splitext(self.filename)
+        backup_file = f"{filename}_{date.strftime('%Y%m%d-%H%M%S')}{file_extension}"
+        shutil.copy2(self.filename, backup_file)
+        return backup_file
 
 
 class Controller:
@@ -160,6 +167,9 @@ class Controller:
     
     def get_game(self, date=None):
         return self.repo.get(date)
+    
+    def backup(self):
+        return self.repo.backup(datetime.datetime.now())
 
 
 class CLI:
@@ -174,7 +184,7 @@ class CLI:
         print(f"{CLI.BOLD}checker{CLI.END} - start game for checking possibilities")
         print(f"{CLI.BOLD}save{CLI.END} - save already completed game")
         print(f"{CLI.BOLD}get{CLI.END} - look up a saved game by date")
-        # print(f"{CLI.BOLD}backup{CLI.END} - backup saves to timestamped file")
+        print(f"{CLI.BOLD}backup{CLI.END} - backup saves to timestamped file")
         print(f"{CLI.BOLD}exit{CLI.END} - quit")
 
     def checker_menu(self):
@@ -245,6 +255,8 @@ class CLI:
                     self.save_menu()
                 case 'get':
                     self.get_menu()
+                case 'backup':
+                    print(f"Backup made to '{self.srv.backup()}'")
                 case 'exit':
                     break
                 case _:
