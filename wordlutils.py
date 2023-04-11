@@ -54,11 +54,16 @@ class WordleGame:
         i = 0
         for c, t in zip(word_tried, result):
             i += 1
+            
             match t:
                 case ResultKey.GRAY:
                     if word_tried.count(c) == 1:
                         self.gray_chars += c
-                    else: self.yellow_chars[i] += c
+                    else:
+                        for c2, t2 in zip(word_tried, result):
+                            if c2 == c and t2 == ResultKey.GREEN:
+                                self.yellow_chars[i] += c
+                                break
                 case ResultKey.YELLOW:
                     self.yellow_chars[i] += c
                 case ResultKey.GREEN:
@@ -153,7 +158,11 @@ class Controller:
 
         filtered = list(filter(lambda x: len(set(x) & set(grays)) == 0, self.all_words)) # gray
         filtered = list(filter(lambda x: all([x[i] not in yellows[i+1] for i in range(5)]), filtered)) # yellow
-        filtered = list(filter(lambda x: all([c in x for c in yellows.values() if c != ""]), filtered)) # yellow
+
+        for y in yellows.values(): # yellow
+            if y != "":
+                filtered = list(filter(lambda x: all([c in x for c in y]), filtered))
+        
         filtered = list(filter(lambda x: all([True if greens[i+1] is None else x[i] == greens[i+1] for i in range(5)]), filtered)) # green
 
         return filtered
