@@ -13,13 +13,15 @@ class ResultKey:
 def result_to_colored_box(string):
     res = ""
     for c in string:
-        if c is ResultKey.GRAY:
-            res += '⬛'
-        elif c is ResultKey.YELLOW:
-            res += '🟨'
-        elif c is ResultKey.GREEN:
-            res += '🟩'
-        else: res += c
+        match c:
+            case ResultKey.GRAY:
+                res += '⬛'
+            case ResultKey.YELLOW:
+                res += '🟨'
+            case ResultKey.GREEN:
+                res += '🟩'
+            case _:
+                res += c
     return res
 
 
