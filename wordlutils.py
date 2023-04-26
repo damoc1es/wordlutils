@@ -27,7 +27,7 @@ def result_to_colored_box(string):
 
 class WordleGame:
     def __init__(self, date=None, solution=None, tries=None, results=None):
-        self.green_chars = {1: None, 2: None, 3: None, 4: None, 5: None}
+        self.green_chars: dict[int, str|None] = {1: None, 2: None, 3: None, 4: None, 5: None}
         self.yellow_chars = {1: "", 2: "", 3: "", 4: "", 5: ""}
         self.gray_chars = ""
 
@@ -190,7 +190,7 @@ class CLI:
     def __init__(self, controller: Controller):
         self.srv = controller
     
-    def print():
+    def print_menu(self):
         print("--- Available commands ---")
         print(f"{CLI.BOLD}checker{CLI.END} - start game for checking possibilities")
         print(f"{CLI.BOLD}save{CLI.END} - save already completed game")
@@ -257,7 +257,7 @@ class CLI:
 
     def start(self):
         while True:
-            CLI.print()
+            self.print_menu()
             cmd = input("\nCommand: ")
             match cmd.lower():
                 case 'checker':
