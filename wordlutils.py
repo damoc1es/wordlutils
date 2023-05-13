@@ -213,9 +213,15 @@ class CLI:
                         print(solution.upper())
                     print()
                 case _:
+                    if len(word) != 5:
+                        print("Word length must be 5.")
+                        continue
                     result = input(f"Enter result (gray '{ResultKey.GRAY}', yellow '{ResultKey.YELLOW}', green '{ResultKey.GREEN}'):\n")
-                    self.srv.add_try(word, result)
-                    print("ADDED TRY\n")
+                    try:
+                        self.srv.add_try(word, result)
+                        print("ADDED TRY\n")
+                    except Exception as e:
+                        print(e)
 
     def save_menu(self):
         print("-- Enter winning word or CANCEL to exit")
@@ -224,16 +230,26 @@ class CLI:
             case 'cancel':
                 return
             case _:
-                print("-- Enter the words or empty to exit")
+                if len(winning) != 5:
+                    print("Word length must be 5.")
+                    return
+                print("-- Enter the words or CANCEL to exit")
                 tries = []
-                for _ in range(6):
+                i = 0
+                while i < 6:
                     word = input().lower()
+                    if word == 'cancel':
+                        return
+                    if len(word) != 5:
+                        print("Word length must be 5.")
+                        continue
                     if word == winning:
                         tries.append(winning)
                         break
                     if word.strip() == '':
                         break
                     tries.append(word)
+                    i += 1
         
         self.srv.store(tries, winning)
         print("GAME SAVED")
