@@ -80,7 +80,7 @@ class WordleGame:
         return s
 
 
-class WordleSimulation():
+class WordleSimulation:
     def __init__(self, winning_word):
         self.winning_word = winning_word.lower()
     
@@ -98,6 +98,28 @@ class WordleSimulation():
             if c != ResultKey.GRAY and c in winner:
                 res[i] = ResultKey.YELLOW
                 word[i] = winner[winner.index(c)] = ResultKey.GRAY
+
+        return "".join(res)
+
+
+class NerdleSimulation:
+    def __init__(self, winning_eq):
+        self.winning_eq = winning_eq
+
+    def result(self, guess):
+        guess = list(guess)
+        winner = list(self.winning_eq)
+        res = [ResultKey.GRAY for _ in range(8)]
+
+        for i, c in enumerate(guess):
+            if c == winner[i]:
+                res[i] = ResultKey.GREEN
+                guess[i] = winner[i] = ResultKey.GRAY
+        
+        for i, c in enumerate(guess):
+            if c != ResultKey.GRAY and c in winner:
+                res[i] = ResultKey.YELLOW
+                guess[i] = winner[winner.index(c)] = ResultKey.GRAY
 
         return "".join(res)
 
@@ -255,7 +277,6 @@ class CLI:
         print("GAME SAVED")
 
     def get_menu(self):
-        # return
         print("-- Enter date (YEAR-MONTH-DAY), empty to get the last one, or EXIT to exit")
         date_str = input()
         if date_str in ("EXIT", "exit"):

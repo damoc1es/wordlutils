@@ -51,10 +51,26 @@ class TestWordleSimulation(unittest.TestCase):
         w = WordleSimulation('CLOSE')
         assert w.result('CHEER') == 'G_Y__'
         assert w.result('LEAVE') == 'Y___G'
+        assert w.result('CLOSE') == 'GGGGG'
     
     def testB(self):
         w = WordleSimulation('GREEN')
         assert w.result('EEEGE') == 'Y_GY_'
+
+
+class TestNerdleSimulation(unittest.TestCase):
+    def testA(self):
+        w = NerdleSimulation("11+5-7=9")
+        assert w.result("15+24=39") == 'GYG__Y_G'
+        assert w.result("17+1-9=9") == 'GYGYG_GG'
+        assert w.result("11+5-7=9") == 'GGGGGGGG'
+    
+    def testB(self):
+        w = NerdleSimulation("99-41=58")
+        assert w.result("15+24=39") == 'YY__YG_Y'
+        assert w.result("54-14=40") == 'YYGY_G__'
+        assert w.result("99-55=44") == 'GGGY_GY_'
+
 
 if __name__ == '__main__':
     unittest.main()
