@@ -80,6 +80,25 @@ class WordleGame:
         return s
 
 
+class NerdleGame:
+    def __init__(self, date=None, solution=None, tries=None, results=None):
+        self.date = date
+        self.solution = solution
+        if tries is None:
+            self.tries = []
+        else: self.tries = tries
+        
+        if results is None:
+            self.results = []
+        else: self.results = results
+    
+    def __str__(self):
+        s = f"{self.date} | {self.solution}"
+        for r, t in zip(self.results, self.tries):
+            s += f"\n{result_to_colored_box(r)} {t}"
+        return s
+
+
 class WordleSimulation:
     def __init__(self, winning_word):
         self.winning_word = winning_word.lower()
@@ -133,7 +152,7 @@ class Repository:
         with open(self.filename, 'a') as file:
             file.write(line)
 
-    def get(self, date):
+    def get(self, date, nerdle=False):
         result = []
         with open(self.filename, 'r') as file:
             result = file.readlines()
@@ -146,7 +165,8 @@ class Repository:
             return None
         
         s = result[0].split(',')
-
+        if nerdle:
+            return NerdleGame(s[0], s[3], s[1].split(), s[2].split())
         return WordleGame(s[0], s[3], s[1].split(), s[2].split())
     
     def backup(self, date: datetime.datetime):
@@ -157,8 +177,9 @@ class Repository:
 
 
 class Controller:
-    def __init__(self, repo, all_words_source=WORDS_LIST_LINK):
+    def __init__(self, repo, nerdle_repo, all_words_source=WORDS_LIST_LINK):
         self.repo = repo
+        self.nerdle_repo = nerdle_repo
         self.game = None
         r = requests.get(all_words_source)
         self.all_words = r.text.split('\n')
@@ -191,15 +212,23 @@ class Controller:
 
         return filtered
 
-    def store(self, tries, winning):
+    def store(self, tries, winning, nerdle=False):
         date = datetime.date.today()
-        simulation = WordleSimulation(winning)
+        if not nerdle:
+            simulation = WordleSimulation(winning)
+        else: simulation = NerdleSimulation(winning)
+
         results = [simulation.result(word) for word in tries]
         tries = [w.upper() for w in tries]
-        self.repo.store(date, tries, results, winning.upper())
+        if not nerdle:
+            self.repo.store(date, tries, results, winning.upper())
+        else: self.nerdle_repo.store(date, tries, results, winning.upper())
     
     def get_game(self, date=None):
         return self.repo.get(date)
+    
+    def get_nerdle(self, date=None):
+        return self.nerdle_repo.get(date, nerdle=True)
     
     def backup(self):
         return self.repo.backup(datetime.datetime.now())
@@ -217,6 +246,8 @@ class CLI:
         print(f"{CLI.BOLD}checker{CLI.END} - start game for checking possibilities")
         print(f"{CLI.BOLD}save{CLI.END} - save already completed game")
         print(f"{CLI.BOLD}get{CLI.END} - look up a saved game by date")
+        print(f"{CLI.BOLD}save nerdle{CLI.END} - save already completed nerdle game")
+        print(f"{CLI.BOLD}get nerdle{CLI.END} - look up a saved nerdle game by date")
         print(f"{CLI.BOLD}backup{CLI.END} - backup saves to timestamped file")
         print(f"{CLI.BOLD}exit{CLI.END} - quit")
 
@@ -276,14 +307,36 @@ class CLI:
         self.srv.store(tries, winning)
         print("GAME SAVED")
 
+    def get_nerdle_menu(self):
+        print("-- Enter date (YEAR-MONTH-DAY), empty to get the last one, or EXIT to exit")
+        date_str = input()
+        if date_str in ("EXIT", "exit"):
+            return
+        if date_str == "":
+            try:
+                game = self.srv.get_nerdle()
+                print(game)
+            except:
+                print("NO SAVED NERDLE GAME")
+        else:
+            try:
+                date = datetime.date.fromisoformat(date_str)
+                game = self.srv.get_nerdle(date)
+                print(game)
+            except:
+                print("INVALID DATE FORMAT")
+    
     def get_menu(self):
         print("-- Enter date (YEAR-MONTH-DAY), empty to get the last one, or EXIT to exit")
         date_str = input()
         if date_str in ("EXIT", "exit"):
             return
         if date_str == "":
-            game = self.srv.get_game()
-            print(game)
+            try:
+                game = self.srv.get_game()
+                print(game)
+            except:
+                print("NO SAVED NERDLE GAME")
         else:
             try:
                 date = datetime.date.fromisoformat(date_str)
@@ -291,6 +344,37 @@ class CLI:
                 print(game)
             except:
                 print("INVALID DATE FORMAT")
+
+    def save_nerdle_menu(self):
+        print("-- Enter winning equation or CANCEL to exit")
+        winning = input().lower()
+        match winning:
+            case 'cancel':
+                return
+            case _:
+                if len(winning) != 8:
+                    print("Length must be 8.")
+                    return
+                print("-- Enter the equations or CANCEL to exit")
+                tries = []
+                i = 0
+                while i < 6:
+                    equation = input().lower()
+                    if equation == 'cancel':
+                        return
+                    if len(equation) != 8:
+                        print("Length must be 8.")
+                        continue
+                    if equation == winning:
+                        tries.append(winning)
+                        break
+                    if equation.strip() == '':
+                        break
+                    tries.append(equation)
+                    i += 1
+        
+        self.srv.store(tries, winning, nerdle=True)
+        print("GAME SAVED") 
 
     def start(self):
         while True:
@@ -301,8 +385,12 @@ class CLI:
                     self.checker_menu()
                 case 'save':
                     self.save_menu()
+                case 'save nerdle':
+                    self.save_nerdle_menu()
                 case 'get':
                     self.get_menu()
+                case 'get nerdle':
+                    self.get_nerdle_menu()
                 case 'backup':
                     print(f"Backup made to '{self.srv.backup()}'")
                 case 'exit':
@@ -312,5 +400,5 @@ class CLI:
 
 
 if __name__ == '__main__':
-    ui = CLI(Controller(Repository("data/wordles.csv")))
+    ui = CLI(Controller(Repository("data/wordles.csv"), Repository("data/nerdles.csv")))
     ui.start()

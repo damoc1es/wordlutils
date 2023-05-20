@@ -4,7 +4,7 @@ import unittest
 
 class TestWordleController(unittest.TestCase):
     def setUp(self):
-        self.controller = Controller(Repository("data/test_wordles.csv"))
+        self.controller = Controller(Repository("data/test_wordles.csv"), Repository("data/test_nerdles.csv"))
         self.controller.start_game()
 
     def test(self):
