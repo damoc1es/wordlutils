@@ -1,6 +1,8 @@
 import datetime
 import requests
 import shutil, os
+import matplotlib.pyplot as plt
+
 
 WORDS_LIST_LINK = 'https://raw.githubusercontent.com/tabatkins/wordle-list/main/words'
 
@@ -169,6 +171,15 @@ class Repository:
             return NerdleGame(s[0], s[3], s[1].split(), s[2].split())
         return WordleGame(s[0], s[3], s[1].split(), s[2].split())
     
+    def get_all(self, nerdle=False):
+        result = []
+        with open(self.filename, 'r') as file:
+            result = file.readlines()
+        
+        if nerdle:
+            return [NerdleGame(x.split(',')[0], x.split(',')[3], x.split(',')[1].split(), x.split(',')[2].split()) for x in result]
+        return [WordleGame(x.split(',')[0], x.split(',')[3], x.split(',')[1].split(), x.split(',')[2].split()) for x in result]
+    
     def backup(self, date: datetime.datetime):
         filename, file_extension = os.path.splitext(self.filename)
         backup_file = f"{filename}_{date.strftime('%Y%m%d-%H%M%S')}{file_extension}"
@@ -232,6 +243,23 @@ class Controller:
     
     def backup(self):
         return self.repo.backup(datetime.datetime.now())
+    
+    def get_stats(self, nerdle=False):
+        dates = []
+        scores = []
+        if not nerdle:
+            games = self.repo.get_all()
+        else:
+            games = self.nerdle_repo.get_all(nerdle)
+        for game in games:
+            dates.append(game.date)
+
+            score = len(game.results)
+            if set(game.results[-1]) != set([ResultKey.GREEN]):
+                score += 1
+            scores.append(score)
+        
+        return dates, scores
 
 
 class CLI:
@@ -246,8 +274,10 @@ class CLI:
         print(f"{CLI.BOLD}checker{CLI.END} - start game for checking possibilities")
         print(f"{CLI.BOLD}save{CLI.END} - save already completed game")
         print(f"{CLI.BOLD}get{CLI.END} - look up a saved game by date")
+        print(f"{CLI.BOLD}stats{CLI.END} - get a plot of stats for all games")
         print(f"{CLI.BOLD}save nerdle{CLI.END} - save already completed nerdle game")
         print(f"{CLI.BOLD}get nerdle{CLI.END} - look up a saved nerdle game by date")
+        print(f"{CLI.BOLD}stats nerdle{CLI.END} - get a plot of stats for all nerdle games")
         print(f"{CLI.BOLD}backup{CLI.END} - backup saves to timestamped file")
         print(f"{CLI.BOLD}exit{CLI.END} - quit")
 
@@ -374,7 +404,27 @@ class CLI:
                     i += 1
         
         self.srv.store(tries, winning, nerdle=True)
-        print("GAME SAVED") 
+        print("GAME SAVED")
+
+    def stats_menu(self, nerdle=False):
+        dates, scores = self.srv.get_stats(nerdle)
+
+        for score in sorted(set(scores)):
+            times = scores.count(score)
+            if times == 1:
+                word = "game"
+            else: word = "games"
+
+            if score == 7:
+                print(f"not guessed: {scores.count(score)} {word}")
+            else: print(f"guessed in {score} tries: {scores.count(score)} {word}")
+        print()
+
+        plt.plot(scores)
+        plt.yticks(range(max(min(scores)-1, 1), 8))
+        plt.ylabel("Tries")
+        plt.xlabel("Game Number")
+        plt.show()
 
     def start(self):
         while True:
@@ -395,6 +445,10 @@ class CLI:
                     print(f"Backup made to '{self.srv.backup()}'")
                 case 'exit':
                     break
+                case 'stats':
+                    self.stats_menu()
+                case 'stats nerdle':
+                    self.stats_menu(True)
                 case _:
                     print("Invalid command.")
 
