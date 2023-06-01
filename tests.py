@@ -1,11 +1,13 @@
-from wordlutils import *
+from wordle import *
+from nerdle import *
+from repo import Repository
 import unittest
 
 
-class TestWordleController(unittest.TestCase):
+class TestWordleCtrl(unittest.TestCase):
     def setUp(self):
-        self.controller = Controller(Repository("data/test_wordles.csv"), Repository("data/test_nerdles.csv"))
-        self.controller.start_game()
+        self.controller = WordleCtrl(Repository("data/test_wordles.csv", WordleGame))
+        self.controller.start()
 
     def test(self):
         self.controller.add_try('OCTAL', '___Y_')
@@ -22,18 +24,16 @@ class TestWordleController(unittest.TestCase):
         assert len(self.controller.get_possible_solutions()) == 1
 
 
-class TestWordleGame(unittest.TestCase):
+class TestWordleRunner(unittest.TestCase):
     def test(self):
-        game = WordleGame()
+        game = WordleRunner()
         game.add_try('OCTAL', '___Y_')
         game.add_try('SIREN', 'G___Y')
         game.add_try('DUMPY', '_Y___')
         game.add_try('STUNT', 'G_YY_')
         game.add_try('SONAR', 'G_YY_')
 
-        gray = game.gray_chars
-        yellow = game.yellow_chars
-        green = game.green_chars
+        gray, yellow, green = game.get_data()
         
         assert set(gray) == set('octliredmpyor')
         
