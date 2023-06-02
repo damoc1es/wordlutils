@@ -122,6 +122,7 @@ class CLI:
 
     def stats_menu(self, ctrl):
         dates, scores = ctrl.get_stats()
+        overall = {}
 
         for score in sorted(set(scores)):
             times = scores.count(score)
@@ -129,15 +130,27 @@ class CLI:
                 word = "game"
             else: word = "games"
 
-            if score == 7:
-                print(f"not guessed: {scores.count(score)} {word}")
-            else: print(f"guessed in {score} tries: {scores.count(score)} {word}")
-        print()
+            count = scores.count(score)
+            overall[score] = count
 
-        plt.plot(scores)
-        plt.yticks(range(max(min(scores)-1, 1), 8))
-        plt.ylabel("Tries")
-        plt.xlabel("Game Number")
+            if score == 7:
+                print(f"not guessed: {count} {word}")
+            else: print(f"guessed in {score} tries: {count} {word}")
+
+        print()
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2)
+        fig.suptitle(f"{self.game.name} STATS")
+
+        ax1.plot(scores, color="#1E51C9")
+        ax1.set_yticks(range(max(min(scores)-1, 1), 8))
+        ax1.set_ylabel("Tries")
+        ax1.set_xlabel("Game Number")
+
+        hbars = ax2.bar(overall.keys(), overall.values(), color="#E7FBFF", edgecolor="#1E51C9")
+        ax2.bar_label(hbars, fmt='%d')
+        ax2.set_xlabel("Tries")
+        ax2.set_ylabel("Games")
         plt.show()
 
     def start_wordle(self):
