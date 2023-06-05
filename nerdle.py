@@ -5,6 +5,8 @@ import datetime
 
 
 class NerdleGame(AbstractGame):
+    NAME = "NERDLE"
+
     def __init__(self, date: datetime.date, tries: list[str], results: list[str], solution: str):
         self.date = date
         self.tries = tries

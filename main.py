@@ -1,8 +1,9 @@
 from wordle import *
 from nerdle import *
-from repo import Repository
+from repo import Repository, RepositoryDb, csv_to_db
 from utils import GameType
 import matplotlib.pyplot as plt
+import tomllib
 
 
 class CLI:
@@ -143,7 +144,8 @@ class CLI:
         fig.suptitle(f"{self.game.name} STATS")
 
         ax1.plot(scores, color="#1E51C9")
-        ax1.set_yticks(range(max(min(scores)-1, 1), 8))
+        if len(scores):
+            ax1.set_yticks(range(max(min(scores)-1, 1), 8))
         ax1.set_ylabel("Tries")
         ax1.set_xlabel("Game Number")
 
@@ -209,7 +211,26 @@ class CLI:
 
 
 if __name__ == '__main__':
-    word_ctrl = WordleCtrl(Repository("data/wordles.csv", WordleGame))
-    nerd_ctrl = NerdleCtrl(Repository("data/nerdles.csv", NerdleGame))
-    ui = CLI(word_ctrl, nerd_ctrl)
+    try:
+        with open("settings.toml", "rb") as f:
+            data = tomllib.load(f)
+        
+        if 'wordle_repo_path' not in data:
+            data['wordle_repo_path'] = "data/wordles.csv"
+        if 'nerdle_repo_path' not in data:
+            data['nerdle_repo_path'] = "data/nerdles.csv"
+        if 'db_repo' not in data:
+            data['db_repo'] = False
+
+        if data['db_repo']:
+            word_repo = RepositoryDb(data['wordle_repo_path'], WordleGame)
+            nerd_repo = RepositoryDb(data['nerdle_repo_path'], NerdleGame)
+        else:
+            word_repo = Repository(data['wordle_repo_path'], WordleGame)
+            nerd_repo = Repository(data['nerdle_repo_path'], NerdleGame)
+    except:
+        word_repo = Repository("data/wordles.csv", WordleGame)
+        nerd_repo = Repository("data/nerdles.csv", NerdleGame)
+    
+    ui = CLI(WordleCtrl(word_repo), NerdleCtrl(nerd_repo))
     ui.choose_game()

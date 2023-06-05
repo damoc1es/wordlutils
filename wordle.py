@@ -6,6 +6,8 @@ import requests
 
 
 class WordleGame(AbstractGame):
+    NAME = "WORDLE"
+
     def __init__(self, date: datetime.date, tries: list[str], results: list[str], solution: str):
         self.date = date
         self.tries = [t.upper() for t in tries]
