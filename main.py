@@ -125,6 +125,15 @@ class CLI:
         dates, scores = ctrl.get_stats()
         overall = {}
 
+        x = ctrl.get_longest_streak()
+        if x is not None:
+            longest_streak, date1, date2 = x
+            print(f"Longest streak of played games: {longest_streak} (from {date1} to {date2})")
+        
+        current_streak = ctrl.get_current_streak()
+        if current_streak is not None:
+            print(f"Current streak: {current_streak}\n")
+
         for score in sorted(set(scores)):
             times = scores.count(score)
             if times == 1:

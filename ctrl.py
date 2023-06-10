@@ -54,6 +54,51 @@ class Controller(ABC):
             scores.append(score)
         
         return dates, scores
+    
+    def get_longest_streak(self):
+        games = self.repo.get_all()
+        if len(games) == 0:
+            return None
+        
+        max_streak = 0
+        date1 = date2 = games[0].date
+
+        current_streak = 1
+        for i in range(len(games)-1):
+            game1 = games[i]
+            game2 = games[i+1]
+
+            if (game2.date - game1.date).days == 1:
+                current_streak += 1
+                date2 = game2.date
+            else:
+                date1 = game1.date
+                current_streak = 1
+            
+            if current_streak > max_streak:
+                max_streak = current_streak
+                
+        
+        return max_streak, date1, date2
+
+    def get_current_streak(self):
+        games = self.repo.get_all()
+        if len(games) == 0:
+            return None
+        
+        if games[-1].date not in (datetime.date.today() - datetime.timedelta(days=1), datetime.date.today()):
+            return None
+
+        current_streak = 1
+        for i in range(len(games)-1, 0, -1):
+            game1 = games[i]
+            game2 = games[i-1]
+
+            if (game1.date - game2.date).days == 1:
+                current_streak += 1
+            else: break
+        
+        return current_streak
 
     @abstractmethod
     def get_possible_solutions(self):
