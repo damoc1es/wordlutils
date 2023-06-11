@@ -9,7 +9,7 @@ class TestWordleCtrl(unittest.TestCase):
         self.controller = WordleCtrl(Repository("data/test_wordles.csv", WordleGame))
         self.controller.start()
 
-    def test(self):
+    def testA(self):
         self.controller.add_try('OCTAL', '___Y_')
         assert len(self.controller.get_possible_solutions()) > 0
         self.controller.add_try('SIREN', 'G___Y')
@@ -18,9 +18,20 @@ class TestWordleCtrl(unittest.TestCase):
         assert len(self.controller.get_possible_solutions()) > 0
         self.controller.add_try('STUNT', 'G_YY_')
         assert len(self.controller.get_possible_solutions()) > 0
+        assert 'stunt' not in self.controller.get_possible_solutions()
         self.controller.add_try('SONAR', 'G_YY_')
         assert len(self.controller.get_possible_solutions()) > 0
+        assert 'sonar' not in self.controller.get_possible_solutions()
         self.controller.add_try('SNAFU', 'GGGGG')
+        assert len(self.controller.get_possible_solutions()) == 1
+
+    def testB(self):
+        self.controller.add_try('LASSO', 'YG_G_')
+        assert len(self.controller.get_possible_solutions()) > 0
+        self.controller.add_try('HALSH', '_GGG_')
+        assert len(self.controller.get_possible_solutions()) > 0
+        assert 'halsh' not in self.controller.get_possible_solutions()
+        self.controller.add_try('BALSA', 'GGGGG')
         assert len(self.controller.get_possible_solutions()) == 1
 
 

@@ -81,10 +81,18 @@ class WordleRunner(AbstractRunner):
                     if word_tried.count(c) == 1:
                         self.gray_chars += c
                     else:
+                        found_gray = False
                         for c2, t2 in zip(word_tried, result):
-                            if c2 == c and t2 == ResultKey.GREEN:
-                                self.yellow_chars[i] += c
-                                break
+                            if c2 == c:
+                                if t2 == ResultKey.GRAY:
+                                    found_gray = True
+                                elif t2 == ResultKey.GREEN:
+                                    self.yellow_chars[i] += c
+                                    found_gray = False
+                                    break
+                        if found_gray:
+                            self.gray_chars += c
+                
                 case ResultKey.YELLOW:
                     self.yellow_chars[i] += c
                 case ResultKey.GREEN:
