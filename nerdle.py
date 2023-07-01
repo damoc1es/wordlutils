@@ -29,6 +29,11 @@ class NerdleGame(AbstractGame):
         return s
 
 
+def is_valid_equation(equation: str) -> bool:
+    ls, rs = equation.split("=")
+    return len(equation) == 8 and eval(ls, {"__builtins__": {}}, {}) == eval(rs, {"__builtins__": {}}, {})
+
+
 class NerdleSimulation(AbstractSimulation):
     def __init__(self, solution: str):
         self.solution = solution

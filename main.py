@@ -4,6 +4,7 @@ from repo import Repository, RepositoryDb, csv_to_db
 from utils import GameType
 import matplotlib.pyplot as plt
 import tomllib
+from ast import literal_eval
 
 
 class CLI:
@@ -66,6 +67,10 @@ class CLI:
                 if len(winning) != length_try:
                     print(f"Length must be {length_try}.")
                     return
+                if self.game == GameType.NERDLE:
+                    if not is_valid_equation(winning):
+                        print("Invalid equation.")
+                        return
                 print("-- Enter the tries or CANCEL to exit")
                 tries = []
                 i = 0
@@ -76,6 +81,10 @@ class CLI:
                     if len(word) != length_try:
                         print(f"Length must be {length_try}.")
                         continue
+                    if self.game == GameType.NERDLE:
+                        if not is_valid_equation(word):
+                            print("Invalid equation.")
+                            continue
                     if word == winning:
                         tries.append(winning)
                         break
@@ -181,6 +190,8 @@ class CLI:
                     self.stats_menu(self.word_ctrl)
                 case "exit":
                     break
+                case "quit":
+                    exit(0)
                 case _:
                     print("Invalid command.")
     
@@ -199,6 +210,8 @@ class CLI:
                     self.stats_menu(self.nerd_ctrl)
                 case "exit":
                     break
+                case "quit":
+                    exit(0)
                 case _:
                     print("Invalid command.")
 
