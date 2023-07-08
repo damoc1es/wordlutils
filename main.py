@@ -4,7 +4,6 @@ from repo import Repository, RepositoryDb, csv_to_db
 from utils import GameType
 import matplotlib.pyplot as plt
 import tomllib
-from ast import literal_eval
 
 
 class CLI:
@@ -33,8 +32,11 @@ class CLI:
             print(f"{CLI.BOLD}exit{CLI.END} - quit")
     
     def checker_menu(self):
-        self.word_ctrl.start()
+        if self.game is GameType.NERDLE:
+            print("Checker not available for Nerdle.")
+            return
 
+        self.word_ctrl.start()
         while True:
             print("-- Enter word, EXIT, or leave empty and enter to return possible solutions")
             word = input()
@@ -173,7 +175,7 @@ class CLI:
         ax2.set_ylabel("Games")
         plt.show()
 
-    def start_wordle(self):
+    def start_game(self, ctrl):
         while True:
             self.print_menu()
             cmd = input("\nChoose action: ")
@@ -183,31 +185,11 @@ class CLI:
                 case "save":
                     self.save_menu()
                 case "get":
-                    self.get_menu(self.word_ctrl)
+                    self.get_menu(ctrl)
                 case "backup":
-                    print(f"Backup made to '{self.word_ctrl.backup()}'")
+                    print(f"Backup made to '{ctrl.backup()}'")
                 case "stats":
-                    self.stats_menu(self.word_ctrl)
-                case "exit":
-                    break
-                case "quit":
-                    exit(0)
-                case _:
-                    print("Invalid command.")
-    
-    def start_nerdle(self):
-        while True:
-            self.print_menu()
-            cmd = input("\nChoose action: ")
-            match cmd.lower():
-                case "save":
-                    self.save_menu()
-                case "get":
-                    self.get_menu(self.nerd_ctrl)
-                case "backup":
-                    print(f"Backup made to '{self.nerd_ctrl.backup()}'")
-                case "stats":
-                    self.stats_menu(self.nerd_ctrl)
+                    self.stats_menu(ctrl)
                 case "exit":
                     break
                 case "quit":
@@ -222,11 +204,11 @@ class CLI:
             match cmd.lower():
                 case "wordle":
                     self.game = GameType.WORDLE
-                    self.start_wordle()
+                    self.start_game(self.word_ctrl)
                     self.game = GameType.NONE
                 case "nerdle":
                     self.game = GameType.NERDLE
-                    self.start_nerdle()
+                    self.start_game(self.nerd_ctrl)
                     self.game = GameType.NONE
                 case "exit":
                     break
